@@ -15,41 +15,46 @@ class MoodEntry {
     this.selectedCardIds = const [],
   });
 
+  // ---- Kalıcı kayıt için JSON dönüşümü ----
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date.toIso8601String(),
+        'mood': mood,
+        'note': note,
+        'cards': selectedCardIds,
+      };
+
+  factory MoodEntry.fromJson(Map<String, dynamic> j) => MoodEntry(
+        id: j['id'] as String,
+        date: DateTime.parse(j['date'] as String),
+        mood: j['mood'] as int,
+        note: j['note'] as String? ?? '',
+        selectedCardIds: List<String>.from(j['cards'] as List? ?? const []),
+      );
+
   // ---- UI yardımcıları ----
 
-  String get moodLabel {
-    switch (mood) {
-      case 1:
-        return "Çok Kötü";
-      case 2:
-        return "Kötü";
-      case 3:
-        return "Orta";
-      case 4:
-        return "İyi";
-      case 5:
-        return "Harika";
-      default:
-        return "Bilinmiyor";
-    }
-  }
+  static String labelOf(int mood) => switch (mood) {
+        1 => "Çok Kötü",
+        2 => "Kötü",
+        3 => "Orta",
+        4 => "İyi",
+        5 => "Harika",
+        _ => "Bilinmiyor",
+      };
 
-  String get moodEmoji {
-    switch (mood) {
-      case 1:
-        return "😣";
-      case 2:
-        return "☹️";
-      case 3:
-        return "😐";
-      case 4:
-        return "🙂";
-      case 5:
-        return "😄";
-      default:
-        return "❓";
-    }
-  }
+  static String emojiOf(int mood) => switch (mood) {
+        1 => "😣",
+        2 => "☹️",
+        3 => "😐",
+        4 => "🙂",
+        5 => "😄",
+        _ => "❓",
+      };
+
+  String get moodLabel => labelOf(mood);
+  String get moodEmoji => emojiOf(mood);
 
   bool get hasCards => selectedCardIds.isNotEmpty;
 }

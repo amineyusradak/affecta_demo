@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/auth_store.dart';
+import '../theme/app_theme.dart';
+import '../widgets/premium.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,71 +64,102 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final p = context.palette;
+
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  "Affecta",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _isRegister ? "Hesap oluştur" : "Giriş yap",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 28),
-                TextField(
-                  controller: _email,
-                  decoration: const InputDecoration(
-                    labelText: "E-posta",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _pass,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: "Şifre",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                if (_isRegister) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _pass2,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: "Şifre (tekrar)",
-                      border: OutlineInputBorder(),
+      body: AuraBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Logo: altın çerçeveli ay simgesi
+                    Center(
+                      child: Container(
+                        width: 92,
+                        height: 92,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.buttonGradient,
+                          boxShadow: [
+                            BoxShadow(
+                              color: p.glowA.withValues(alpha: 0.7),
+                              blurRadius: 36,
+                            ),
+                          ],
+                        ),
+                        child: Text('☾', style: AppTheme.symbol(44, AppColors.onButton)),
+                      ),
                     ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _submit,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(_isRegister ? "Kayıt Ol" : "Giriş Yap"),
-                  ),
+                    const SizedBox(height: 20),
+                    Text("Affecta",
+                        textAlign: TextAlign.center, style: text.displayMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      "İçindeki sesi dinle.",
+                      textAlign: TextAlign.center,
+                      style: text.bodyLarge
+                          ?.copyWith(color: p.textSecondary),
+                    ),
+                    const SizedBox(height: 40),
+                    Text(
+                      _isRegister ? "Hesap oluştur" : "Tekrar hoş geldin",
+                      style: text.headlineSmall,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: "E-posta",
+                        prefixIcon: Icon(Icons.mail_outline),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _pass,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Şifre",
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                    ),
+                    if (_isRegister) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _pass2,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: "Şifre (tekrar)",
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    GradientButton(
+                      label: _isRegister ? "Kayıt Ol" : "Giriş Yap",
+                      icon: Icons.auto_awesome,
+                      onPressed: _submit,
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => setState(() => _isRegister = !_isRegister),
+                      child: Text(
+                        _isRegister
+                            ? "Zaten hesabın var mı? Giriş yap"
+                            : "Hesabın yok mu? Kayıt ol",
+                        style: TextStyle(color: p.primary, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => setState(() => _isRegister = !_isRegister),
-                  child: Text(_isRegister
-                      ? "Zaten hesabın var mı? Giriş yap"
-                      : "Hesabın yok mu? Kayıt ol"),
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../data/mock_data.dart';
+import '../data/mood_store.dart';
 import '../data/reflection_cards.dart';
+import '../models/mood_entry.dart';
+import '../theme/app_theme.dart';
+import '../widgets/premium.dart';
 import '../widgets/reflection_pick_card.dart';
+
+const _months = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+];
+const _weekdays = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
 class AddMoodScreen extends StatefulWidget {
   const AddMoodScreen({super.key});
@@ -12,65 +21,38 @@ class AddMoodScreen extends StatefulWidget {
 }
 
 class _AddMoodScreenState extends State<AddMoodScreen> {
-  double _mood = 3;
+  int _mood = 3;
   final _note = TextEditingController();
-
   final Set<String> _selectedCards = {}; // max 3
-  final ScrollController _cardsCtrl = ScrollController(); // ✅ Scrollbar fix
 
   @override
   void dispose() {
     _note.dispose();
-    _cardsCtrl.dispose();
     super.dispose();
-  }
-
-  String get _emoji {
-    final m = _mood.round();
-    return switch (m) {
-      1 => "😣",
-      2 => "☹️",
-      3 => "😐",
-      4 => "🙂",
-      5 => "😄",
-      _ => "❓",
-    };
-  }
-
-  String get _label {
-    final m = _mood.round();
-    return switch (m) {
-      1 => "Çok Kötü",
-      2 => "Kötü",
-      3 => "Orta",
-      4 => "İyi",
-      5 => "Harika",
-      _ => "Bilinmiyor",
-    };
   }
 
   void _save() {
     moodStore.add(
-      mood: _mood.round(),
+      mood: _mood,
       note: _note.text.trim(),
       selectedCardIds: _selectedCards.toList(),
     );
 
     _note.clear();
-    _selectedCards.clear();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _selectedCards.clear();
+      _mood = 3;
+    });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Kaydedildi ✅")),
+      const SnackBar(content: Text("Kaydedildi ✨ Kendine zaman ayırdığın için teşekkürler.")),
     );
-    setState(() {});
   }
 
   void _toggleCard(String id) {
     setState(() {
-      if (_selectedCards.contains(id)) {
-        _selectedCards.remove(id);
-        return;
-      }
+      if (_selectedCards.remove(id)) return; // zaten seçiliyse kaldır
       if (_selectedCards.length >= 3) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("En fazla 3 kart seçebilirsin.")),
@@ -83,139 +65,152 @@ class _AddMoodScreenState extends State<AddMoodScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: moodStore,
-      builder: (context, _) {
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: ListView(
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    final now = DateTime.now();
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      children: [
+        // ---- Karşılama ----
+        Text(
+          "${now.day} ${_months[now.month - 1]}, ${_weekdays[now.weekday - 1]}",
+          style: TextStyle(color: p.textSecondary, letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 4),
+        Text("Bugün nasılsın?", style: text.headlineMedium),
+        const SizedBox(height: 20),
+
+        // ---- Mood seçimi ----
+        SoftCard(
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Card(
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            "$_emoji  $_label",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Duygu durumunu seç ve not ekle.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                          const SizedBox(height: 14),
-                          Slider(
-                            value: _mood,
-                            min: 1,
-                            max: 5,
-                            divisions: 4,
-                            label: _label,
-                            onChanged: (v) => setState(() => _mood = v),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _note,
-                            maxLines: 3,
-                            decoration: const InputDecoration(
-                              labelText: "Not (opsiyonel)",
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            onPressed: _save,
-                            icon: const Icon(Icons.save_outlined),
-                            label: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              child: Text("Kaydet"),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Toplam kayıt: ${moodStore.items.length}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
+                  for (int m = 1; m <= 5; m++)
+                    _MoodBubble(
+                      mood: m,
+                      selected: _mood == m,
+                      onTap: () => setState(() => _mood = m),
                     ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  Card(
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            "Farkındalık Kartı Seç (opsiyonel)",
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Bu kayıtla ilişkilendirmek için 0–3 kart seçebilirsin.",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 10),
-
-                          SizedBox(
-                            height: 210,
-                            child: Scrollbar(
-                              controller: _cardsCtrl,
-                              thumbVisibility: true,
-                              child: ListView.separated(
-                                controller: _cardsCtrl,
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(horizontal: 6),
-                                itemCount: reflectionCards.length,
-                                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                                itemBuilder: (context, i) {
-                                  final c = reflectionCards[i];
-                                  final isSel = _selectedCards.contains(c.id);
-
-                                  return SizedBox(
-                                    width: 170,
-                                    child: ReflectionPickCard(
-                                      card: c,
-                                      selected: isSel,
-                                      onTap: () => _toggleCard(c.id),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 8),
-                          Text(
-                            "Seçilen: ${_selectedCards.length}/3",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
-            ),
+              const SizedBox(height: 14),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Text(
+                  MoodEntry.labelOf(_mood),
+                  key: ValueKey(_mood),
+                  style: AppTheme.serif(26, context.ink(AppColors.mood(_mood)), FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _note,
+                maxLines: 3,
+                minLines: 2,
+                decoration: const InputDecoration(
+                  hintText: "Aklından geçenleri yaz… (opsiyonel)",
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 28),
+
+        // ---- Kart seçimi ----
+        const SectionTitle(
+          "Kartını seç",
+          subtitle: "0–3 kart seçebilirsin · Mesajını okumak için karta uzun bas",
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 260,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            itemCount: reflectionCards.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final c = reflectionCards[i];
+              return SizedBox(
+                width: 165,
+                child: ReflectionPickCard(
+                  card: c,
+                  selected: _selectedCards.contains(c.id),
+                  onTap: () => _toggleCard(c.id),
+                  onLongPress: () => showCardPrompt(context, c),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        Center(
+          child: Text(
+            "Seçilen: ${_selectedCards.length}/3",
+            style: TextStyle(color: p.textSecondary),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        GradientButton(
+          label: "Kaydet",
+          icon: Icons.auto_awesome,
+          onPressed: _save,
+        ),
+      ],
+    );
+  }
+}
+
+/// Pastel daire içinde mood emojisi; seçilince büyür ve renklenir.
+class _MoodBubble extends StatelessWidget {
+  final int mood;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _MoodBubble({required this.mood, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = AppColors.mood(mood);
+    return GestureDetector(
+      onTap: onTap,
+      // Yaylanan büyüme sadece ölçekte: ölçeğin hedefi aşması zararsız
+      child: AnimatedScale(
+        scale: selected ? 1.0 : 0.8,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutBack,
+        // Renk ve gölge yaylanmadan değişir; aksi halde gölge
+        // bulanıklığı eksiye düşüp hata verir
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          width: 60,
+          height: 60,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected ? color : color.withValues(alpha: 0.3),
+            border: Border.all(
+              color: selected ? context.ink(color) : Colors.transparent,
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: selected ? 0.7 : 0),
+                blurRadius: 18,
+              ),
+            ],
+          ),
+          child: Text(
+            MoodEntry.emojiOf(mood),
+            style: const TextStyle(fontSize: 30),
+          ),
+        ),
+      ),
     );
   }
 }

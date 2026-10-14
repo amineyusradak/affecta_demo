@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "quotes": [
+    { "text": "İlim ilim bilmektir, ilim kendin bilmektir. Sen kendini bilmezsen, ya nice okumaktır?", "author": "Yunus Emre", "feelings": ["calm"] },
+    { "text": "Söz ola kese savaşı, söz ola kestire başı; söz ola ağulu aşı bal ile yağ ede bir söz.", "author": "Yunus Emre", "feelings": ["anger"] },
+    { "text": "Gelin tanış olalım, işi kolay kılalım; sevelim, sevilelim, dünya kimseye kalmaz.", "author": "Yunus Emre", "feelings": ["lonely"] },
+    { "text": "Ben gelmedim dava için, benim işim sevi için; dostun evi gönüllerdir, gönüller yapmaya geldim.", "author": "Yunus Emre", "feelings": ["lonely", "happy"] },
+    { "text": "Sen sana ne sanırsan, ele de onu san.", "author": "Yunus Emre", "feelings": ["lonely", "anger"] },
+
+    { "text": "Dinle, bu ney nasıl şikâyet ediyor; ayrılıklardan nasıl hikâye ediyor.", "author": "Mevlânâ", "feelings": ["sadness"] },
+    { "text": "Aslından uzak düşen herkes, yine kavuşacağı zamanı arar.", "author": "Mevlânâ", "feelings": ["lonely", "sadness"] },
+    { "text": "Sevgiyle acılar tatlılaşır, sevgiyle bakırlar altın olur.", "author": "Mevlânâ", "feelings": ["sadness", "happy"] },
+    { "text": "Hamdım, piştim, yandım.", "author": "Mevlânâ", "feelings": ["sadness", "motivation"] },
+
+    { "text": "Eline, diline, beline sahip ol.", "author": "Hacı Bektaş-ı Veli", "feelings": ["anger"] },
+    { "text": "Ne ararsan kendinde ara.", "author": "Hacı Bektaş-ı Veli", "feelings": ["calm", "anxiety"] },
+
+    { "text": "Dil, kapı eşiğinde yatan bir aslandır; ey ev sahibi dikkat et, başını yer.", "author": "Yusuf Has Hacib · Kutadgu Bilig", "feelings": ["anger"] },
+    { "text": "Evham hastalığın yarısıdır; sükûnet ilacın yarısı, sabır ise şifanın başlangıcıdır.", "author": "İbn Sina", "feelings": ["anxiety"] },
+    { "text": "Ya tutarsa!", "author": "Nasreddin Hoca", "feelings": ["motivation"] },
+    { "text": "Âyinesi iştir kişinin, lafa bakılmaz.", "author": "Ziya Paşa", "feelings": ["motivation"] },
+
+    { "text": "Seni rahatsız eden şeyin kendisi değil, ona dair yargındır; o yargıyı değiştirmek senin elinde.", "author": "Marcus Aurelius", "feelings": ["anxiety", "anger"] },
+    { "text": "Gerçekte olduğundan çok, hayalimizde acı çekeriz.", "author": "Seneca", "feelings": ["anxiety"] },
+    { "text": "İnsanları olaylar değil, olaylar hakkındaki düşünceleri huzursuz eder.", "author": "Epiktetos", "feelings": ["anxiety", "stress"] },
+    { "text": "Bazı şeyler kontrolümüzdedir, bazıları değildir. Huzur, bu ikisini ayırt etmekle başlar.", "author": "Epiktetos", "feelings": ["stress", "anxiety"] },
+    { "text": "Dalgaların durmadan çarptığı kayalık bir burun gibi ol: o sağlam durur ve etrafındaki sular yatışır.", "author": "Marcus Aurelius", "feelings": ["sadness", "stress"] },
+    { "text": "Zihne dinlenme verilmeli; dinlendikten sonra daha güçlü ve keskin kalkar.", "author": "Seneca", "feelings": ["tired"] },
+    { "text": "Sabah kalkmakta zorlanırsan kendine şunu söyle: Bir insanın işini yapmak için uyanıyorum.", "author": "Marcus Aurelius", "feelings": ["tired", "motivation"] },
+    { "text": "Öfkenin en büyük ilacı beklemektir.", "author": "Seneca", "feelings": ["anger"] },
+    { "text": "Zor oldukları için cesaret edemediğimiz şeyler yoktur; cesaret edemediğimiz için zor olan şeyler vardır.", "author": "Seneca", "feelings": ["stress", "motivation"] },
+    { "text": "Mutlu bir hayat için çok az şey gerekir; hepsi senin içinde, düşünme biçiminde.", "author": "Marcus Aurelius", "feelings": ["happy", "calm"] },
+    { "text": "Yoksul olan az şeyi olan değil, daha fazlasını isteyendir.", "author": "Seneca", "feelings": ["happy"] },
+    { "text": "Bin millik yolculuk tek bir adımla başlar.", "author": "Lao Tzu", "feelings": ["motivation"] },
+    { "text": "Hiçbir yer insana kendi ruhundan daha sakin bir sığınak sunmaz.", "author": "Marcus Aurelius", "feelings": ["calm", "stress"] },
+
+    { "text": "Bulutlu günler de gökyüzünün bir parçası; sen hâlâ gökyüzüsün.", "author": null, "feelings": ["sadness"] },
+    { "text": "Bir arkadaşına göstereceğin şefkati bugün kendine göster.", "author": null, "feelings": ["sadness", "lonely"] },
+    { "text": "Dinlenmek de ilerlemenin bir parçası. Durmak, vazgeçmek değildir.", "author": null, "feelings": ["tired"] },
+    { "text": "Yalnız hissetmek, yalnız olduğun anlamına gelmez.", "author": null, "feelings": ["lonely"] },
+    { "text": "Hepsini bugün bitirmek zorunda değilsin. Sadece sıradakini yap.", "author": null, "feelings": ["stress"] },
+    { "text": "Bu hafifliği fark et ve sakla; zor günlerde ona geri dönebilirsin.", "author": null, "feelings": ["happy"] },
+    { "text": "Başlamak için hazır hissetmeyi bekleme; başlamak hazır hissettirir.", "author": null, "feelings": ["motivation"] },
+    { "text": "Şu an buradasın ve bu yeterli.", "author": null, "feelings": ["calm"] }
+  ]
+}

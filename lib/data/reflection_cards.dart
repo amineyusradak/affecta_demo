@@ -1,97 +1,115 @@
 import 'package:flutter/material.dart';
 import '../models/reflection_card.dart';
 
-/// Farkındalık / refleksiyon kartları (mock)
-/// Not: Tarot değil; psikolojik farkındalık temalı mini yönlendirmeler.
+/// Farkındalık / refleksiyon kartları
+/// Not: Tarot değil; tarot estetiğinde psikolojik farkındalık yönlendirmeleri.
 const List<ReflectionCard> reflectionCards = [
   ReflectionCard(
     id: 'breath',
+    numeral: 'I',
     title: 'Nefes Alanı',
     subtitle: 'Dur · Nefes al · Yeniden başla',
-    icon: Icons.spa_outlined,
-    accent: Color(0xFF6CBF7D),
+    symbol: '❋',
+    accent: Color(0xFFA8DCC8), // nane
     prompt:
     '30 saniye sadece nefesine odaklan. Omuzlarını gevşet. Nefesin doğal akışını izle.',
   ),
   ReflectionCard(
     id: 'boundary',
+    numeral: 'II',
     title: 'Sınır Koyma',
     subtitle: 'Hayır demek de özdeğerdir',
-    icon: Icons.shield_outlined,
-    accent: Color(0xFF6F7AE0),
+    symbol: '◈',
+    accent: Color(0xFFBFB3F2), // lavanta
     prompt:
     'Bugün “hayır” demen gereken küçük bir yer var mı? Tek cümlelik nazik bir sınır yaz.',
   ),
   ReflectionCard(
     id: 'self_compassion',
+    numeral: 'III',
     title: 'Şefkat',
     subtitle: 'Kendine nazik ol',
-    icon: Icons.favorite_border,
-    accent: Color(0xFFE07A8B),
+    symbol: '♡',
+    accent: Color(0xFFF5B5C6), // pembe
     prompt:
     'Şu an en yakın arkadaşın sen olsaydın ona ne söylerdin? Aynısını kendine söyle.',
   ),
   ReflectionCard(
     id: 'focus',
+    numeral: 'IV',
     title: 'Odak',
     subtitle: 'Tek şey seç · Bitir',
-    icon: Icons.gps_fixed,
-    accent: Color(0xFFB35D60),
+    symbol: '◎',
+    accent: Color(0xFFF7C59F), // şeftali
     prompt:
     'Şu an kontrol edebildiğin tek bir şey seç. 10 dakika sadece ona odaklan.',
   ),
   ReflectionCard(
     id: 'reality_check',
-    title: 'Gerçeklik Kontrolü',
+    numeral: 'V',
+    title: 'Gerçeklik',
     subtitle: 'Kanıt ne? Alternatif ne?',
-    icon: Icons.search,
-    accent: Color(0xFF4FA3B8),
+    symbol: '☍',
+    accent: Color(0xFFA9CCEF), // gök mavisi
     prompt:
     'Zihnindeki düşünceyi yaz. Sonra: Bu düşüncenin kanıtı ne? Alternatif bir açıklama ne olabilir?',
   ),
   ReflectionCard(
     id: 'gratitude',
+    numeral: 'VI',
     title: 'Şükür',
     subtitle: 'Küçük olan da büyük',
-    icon: Icons.wb_sunny_outlined,
-    accent: Color(0xFFE0B84E),
+    symbol: '☼',
+    accent: Color(0xFFF3DC8E), // tereyağı
     prompt:
     'Bugünden 3 küçük şey yaz: “Bugün şuna teşekkür edebilirim…”',
   ),
   ReflectionCard(
     id: 'body_scan',
-    title: 'Beden Taraması',
+    numeral: 'VII',
+    title: 'Beden',
     subtitle: 'Bedenin mesaj veriyor',
-    icon: Icons.accessibility_new,
-    accent: Color(0xFF7A6FE0),
+    symbol: '♁',
+    accent: Color(0xFFD3B5EE), // leylak
     prompt:
     'Başından ayağına tarama yap: Nerede gerginlik var? 3 derin nefesle o bölgeyi yumuşat.',
   ),
   ReflectionCard(
     id: 'release',
+    numeral: 'VIII',
     title: 'Bırakma',
     subtitle: 'Taşıdığını indir',
-    icon: Icons.backpack_outlined,
-    accent: Color(0xFF6FB8A2),
+    symbol: '☄',
+    accent: Color(0xFFA6DDE0), // su yeşili
     prompt:
     'Bugün taşıdığın yükü tek cümleyle yaz. “Bunu şu an bırakmayı seçiyorum…” diye bitir.',
   ),
   ReflectionCard(
     id: 'tiny_step',
+    numeral: 'IX',
     title: 'Minik Adım',
     subtitle: 'Küçük hareket büyük fark',
-    icon: Icons.directions_walk,
-    accent: Color(0xFF8AAE5A),
+    symbol: '✧',
+    accent: Color(0xFFC3DDA4), // adaçayı
     prompt:
     'Şu anki hedefin için 2 dakikalık minik bir adım seç. Hemen şimdi yap.',
   ),
   ReflectionCard(
     id: 'acceptance',
+    numeral: 'X',
     title: 'Kabullenme',
     subtitle: 'Direnç yoruyor',
-    icon: Icons.waves_outlined,
-    accent: Color(0xFF5B8BBF),
+    symbol: '☾',
+    accent: Color(0xFFB3C3F0), // çiçek mavisi
     prompt:
     'Değiştiremediğin şeyi yaz. Sonra: “Bunu şu an olduğu haliyle kabul ediyorum.” cümlesini kur.',
   ),
 ];
+
+/// ID'den kart bul (bulunamazsa null)
+ReflectionCard? cardById(String id) {
+  for (final c in reflectionCards) {
+    if (c.id == id) return c;
+  }
+  return null;
+}
