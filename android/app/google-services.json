@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "786620788340",
+    "project_id": "affecta-6de66",
+    "storage_bucket": "affecta-6de66.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:786620788340:android:6b78c8ff734cc40af36b21",
+        "android_client_info": {
+          "package_name": "com.amine.affecta.affecta_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8WbDtE4Iarl3Lpkg7IpzOebmWOYE_6bg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

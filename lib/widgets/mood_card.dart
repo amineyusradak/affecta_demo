@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/link_store.dart';
+import '../data/mood_store.dart';
 import '../data/reflection_cards.dart';
 import '../models/mood_entry.dart';
 import '../models/reflection_card.dart';
@@ -77,6 +79,25 @@ class MoodCard extends StatelessWidget {
                             ],
                           ),
                         ),
+                        // Notu danışmanla paylaş / gizle (sadece danışmana bağlıysa)
+                        if (entry.note.isNotEmpty && linkStore.links.any((l) => l.shareMood))
+                          IconButton(
+                            tooltip: entry.shareNote ? "Not paylaşılıyor · gizle" : "Not gizli · danışmanımla paylaş",
+                            icon: Icon(
+                              entry.shareNote ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                              color: entry.shareNote ? p.primary : p.textSecondary,
+                            ),
+                            onPressed: () {
+                              moodStore.setShareNote(entry, !entry.shareNote);
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(SnackBar(
+                                  content: Text(entry.shareNote
+                                      ? "Not artık gizli 🔒"
+                                      : "Not danışmanınla paylaşıldı"),
+                                ));
+                            },
+                          ),
                         IconButton(
                           tooltip: "Sil",
                           icon: Icon(Icons.delete_outline_rounded, color: p.textSecondary),

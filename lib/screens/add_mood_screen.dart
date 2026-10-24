@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/link_store.dart';
 import '../data/mood_store.dart';
 import '../data/reflection_cards.dart';
 import '../models/mood_entry.dart';
@@ -8,10 +9,28 @@ import '../widgets/premium.dart';
 import '../widgets/reflection_pick_card.dart';
 
 const _months = [
-  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+  'Ocak',
+  'Şubat',
+  'Mart',
+  'Nisan',
+  'Mayıs',
+  'Haziran',
+  'Temmuz',
+  'Ağustos',
+  'Eylül',
+  'Ekim',
+  'Kasım',
+  'Aralık',
 ];
-const _weekdays = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const _weekdays = [
+  'Pazartesi',
+  'Salı',
+  'Çarşamba',
+  'Perşembe',
+  'Cuma',
+  'Cumartesi',
+  'Pazar',
+];
 
 class AddMoodScreen extends StatefulWidget {
   const AddMoodScreen({super.key});
@@ -25,6 +44,9 @@ class _AddMoodScreenState extends State<AddMoodScreen> {
   final _note = TextEditingController();
   final Set<String> _selectedCards = {}; // max 3
 
+  /// Notu danışmanla paylaş: varsayılan KAPALI (gizlilik kullanıcıda)
+  bool _shareNote = false;
+
   @override
   void dispose() {
     _note.dispose();
@@ -36,6 +58,7 @@ class _AddMoodScreenState extends State<AddMoodScreen> {
       mood: _mood,
       note: _note.text.trim(),
       selectedCardIds: _selectedCards.toList(),
+      shareNote: _shareNote,
     );
 
     _note.clear();
@@ -43,10 +66,13 @@ class _AddMoodScreenState extends State<AddMoodScreen> {
     setState(() {
       _selectedCards.clear();
       _mood = 3;
+      _shareNote = false; // her kayıtta yeniden sorulsun
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Kaydedildi ✨ Kendine zaman ayırdığın için teşekkürler.")),
+      const SnackBar(
+        content: Text("Kaydedildi ✨ Kendine zaman ayırdığın için teşekkürler."),
+      ),
     );
   }
 
@@ -69,96 +95,138 @@ class _AddMoodScreenState extends State<AddMoodScreen> {
     final text = Theme.of(context).textTheme;
     final now = DateTime.now();
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+    // Üstte kayan içerik, altta hep görünen Kaydet düğmesi.
+    // Klavye açılınca Column küçülür ve düğme klavyenin hemen üstünde kalır.
+    return Column(
       children: [
-        // ---- Karşılama ----
-        Text(
-          "${now.day} ${_months[now.month - 1]}, ${_weekdays[now.weekday - 1]}",
-          style: TextStyle(color: p.textSecondary, letterSpacing: 0.5),
-        ),
-        const SizedBox(height: 4),
-        Text("Bugün nasılsın?", style: text.headlineMedium),
-        const SizedBox(height: 20),
-
-        // ---- Mood seçimi ----
-        SoftCard(
-          child: Column(
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            // Listeyi kaydırınca klavye kapansın
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (int m = 1; m <= 5; m++)
-                    _MoodBubble(
-                      mood: m,
-                      selected: _mood == m,
-                      onTap: () => setState(() => _mood = m),
-                    ),
-                ],
+              // ---- Karşılama ----
+              Text(
+                "${now.day} ${_months[now.month - 1]}, ${_weekdays[now.weekday - 1]}",
+                style: TextStyle(color: p.textSecondary, letterSpacing: 0.5),
               ),
-              const SizedBox(height: 14),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Text(
-                  MoodEntry.labelOf(_mood),
-                  key: ValueKey(_mood),
-                  style: AppTheme.serif(26, context.ink(AppColors.mood(_mood)), FontWeight.w700),
+              const SizedBox(height: 4),
+              Text("Bugün nasılsın?", style: text.headlineMedium),
+              const SizedBox(height: 20),
+
+              // ---- Mood seçimi ----
+              SoftCard(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        for (int m = 1; m <= 5; m++)
+                          _MoodBubble(
+                            mood: m,
+                            selected: _mood == m,
+                            onTap: () => setState(() => _mood = m),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Text(
+                        MoodEntry.labelOf(_mood),
+                        key: ValueKey(_mood),
+                        style: AppTheme.serif(
+                          26,
+                          context.ink(AppColors.mood(_mood)),
+                          FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _note,
+                      maxLines: 3,
+                      minLines: 2,
+                      decoration: const InputDecoration(
+                        hintText: "Aklından geçenleri yaz… (opsiyonel)",
+                      ),
+                    ),
+                    // Sadece bir danışmana bağlıysa göster
+                    ListenableBuilder(
+                      listenable: linkStore,
+                      builder: (context, _) {
+                        final sharing = linkStore.links.where((l) => l.shareMood).toList();
+                        if (sharing.isEmpty) return const SizedBox.shrink();
+                        return SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          value: _shareNote,
+                          onChanged: (v) => setState(() => _shareNote = v),
+                          secondary: Icon(
+                            _shareNote ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                            color: p.primary,
+                          ),
+                          title: const Text("Bu notu danışmanımla paylaş"),
+                          subtitle: Text(
+                            _shareNote
+                                ? "${sharing.map((l) => l.counselorName).join(', ')} bu notu görebilecek"
+                                : "Not gizli · danışmanın sadece mood’unu görür",
+                            style: TextStyle(color: p.textSecondary, fontSize: 12),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _note,
-                maxLines: 3,
-                minLines: 2,
-                decoration: const InputDecoration(
-                  hintText: "Aklından geçenleri yaz… (opsiyonel)",
+              const SizedBox(height: 28),
+
+              // ---- Kart seçimi ----
+              const SectionTitle(
+                "Kartını seç",
+                subtitle:
+                    "0–3 kart seçebilirsin · Mesajını okumak için karta uzun bas",
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 260,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
+                  itemCount: reflectionCards.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final c = reflectionCards[i];
+                    return SizedBox(
+                      width: 165,
+                      child: ReflectionPickCard(
+                        card: c,
+                        selected: _selectedCards.contains(c.id),
+                        onTap: () => _toggleCard(c.id),
+                        onLongPress: () => showCardPrompt(context, c),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: Text(
+                  "Seçilen: ${_selectedCards.length}/3",
+                  style: TextStyle(color: p.textSecondary),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 28),
 
-        // ---- Kart seçimi ----
-        const SectionTitle(
-          "Kartını seç",
-          subtitle: "0–3 kart seçebilirsin · Mesajını okumak için karta uzun bas",
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 260,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            itemCount: reflectionCards.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final c = reflectionCards[i];
-              return SizedBox(
-                width: 165,
-                child: ReflectionPickCard(
-                  card: c,
-                  selected: _selectedCards.contains(c.id),
-                  onTap: () => _toggleCard(c.id),
-                  onLongPress: () => showCardPrompt(context, c),
-                ),
-              );
-            },
+        // ---- Sabit Kaydet düğmesi ----
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: GradientButton(
+            label: "Kaydet",
+            icon: Icons.auto_awesome,
+            onPressed: _save,
           ),
-        ),
-        const SizedBox(height: 10),
-        Center(
-          child: Text(
-            "Seçilen: ${_selectedCards.length}/3",
-            style: TextStyle(color: p.textSecondary),
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        GradientButton(
-          label: "Kaydet",
-          icon: Icons.auto_awesome,
-          onPressed: _save,
         ),
       ],
     );
@@ -171,7 +239,11 @@ class _MoodBubble extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _MoodBubble({required this.mood, required this.selected, required this.onTap});
+  const _MoodBubble({
+    required this.mood,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

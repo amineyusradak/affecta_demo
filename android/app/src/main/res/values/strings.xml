@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Günün sözü — ince ve sade</string>
+    <string name="widget_placeholder">Uygulamayı bir kez aç, günün sözü burada belirsin.</string>
+</resources>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/link_store.dart';
 import '../data/mood_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/mood_card.dart';
@@ -11,7 +12,7 @@ class HistoryScreen extends StatelessWidget {
     final p = context.palette;
 
     return ListenableBuilder(
-      listenable: moodStore,
+      listenable: Listenable.merge([moodStore, linkStore]),
       builder: (context, _) {
         final items = moodStore.items;
 

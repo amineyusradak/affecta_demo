@@ -26,6 +26,9 @@ enum Feeling {
 }
 
 class Quote {
+  /// Firestore belge kimliği (uygulama içi listedekilerde null)
+  final String? id;
+
   final String text;
 
   /// Sözün sahibi; null ise Affecta'nın kendi sözü
@@ -34,16 +37,35 @@ class Quote {
   /// Bu sözün iyi geldiği duygular
   final Set<Feeling> feelings;
 
-  const Quote({required this.text, this.author, required this.feelings});
+  /// Sözü ekleyen danışman. null ise admin'in herkese açık sözü;
+  /// dolu ise sadece o danışmanın danışanlarına "Danışmanından" olarak görünür.
+  final String? counselorId;
 
-  factory Quote.fromJson(Map<String, dynamic> j) => Quote(
+  const Quote({
+    this.id,
+    required this.text,
+    this.author,
+    required this.feelings,
+    this.counselorId,
+  });
+
+  factory Quote.fromJson(Map<String, dynamic> j, {String? id}) => Quote(
+        id: id,
         text: j['text'] as String,
         author: j['author'] as String?,
         feelings: (j['feelings'] as List)
             .map((e) => Feeling.fromName(e as String))
             .whereType<Feeling>()
             .toSet(),
+        counselorId: j['counselorId'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'author': author,
+        'feelings': feelings.map((f) => f.name).toList(),
+        if (counselorId != null) 'counselorId': counselorId,
+      };
 
   /// {"version":1,"quotes":[…]} biçimindeki JSON metnini listeye çevirir
   static List<Quote> listFromJson(String raw) {

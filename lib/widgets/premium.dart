@@ -108,11 +108,15 @@ class GradientButton extends StatelessWidget {
   final IconData? icon;
   final VoidCallback onPressed;
 
+  /// true iken dönen çember gösterir ve dokunmayı kapatır
+  final bool loading;
+
   const GradientButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.icon,
+    this.loading = false,
   });
 
   @override
@@ -133,13 +137,20 @@ class GradientButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: onPressed,
+          onTap: loading ? null : onPressed,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 17),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) ...[
+                if (loading) ...[
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onButton),
+                  ),
+                  const SizedBox(width: 10),
+                ] else if (icon != null) ...[
                   Icon(icon, color: AppColors.onButton, size: 20),
                   const SizedBox(width: 8),
                 ],

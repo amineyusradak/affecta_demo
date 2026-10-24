@@ -1,10 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'admin/admin_shell.dart';
+import 'data/auth_store.dart';
+import 'counselor/counselor_shell.dart';
 import 'data/daily_store.dart';
+import 'data/link_store.dart';
 import 'data/mood_store.dart';
 import 'data/quote_store.dart';
+import 'data/reminder_store.dart';
 import 'data/theme_store.dart';
+import 'firebase_options.dart';
 import 'screens/login_screen.dart';
+import 'services/daily_sync.dart';
 import 'screens/add_mood_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/report_screen.dart';
@@ -14,10 +23,27 @@ import 'theme/app_theme.dart';
 import 'widgets/premium.dart';
 
 Future<void> main() async {
-  // Uygulama açılmadan önce kayıtlı verileri ve tema seçimini oku
   WidgetsFlutterBinding.ensureInitialized();
-  await Future.wait([moodStore.load(), themeStore.load(), dailyStore.load(), quoteStore.load()]);
+  // Firebase'e bağlan (ayarlar flutterfire configure ile üretilen dosyadan)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Telefondaki ayarları oku
+  await Future.wait([themeStore.load(), dailyStore.load(), quoteStore.load(), reminderStore.load()]);
+
+  // Giriş durumunu dinle; kim giriş yaparsa kayıtları onun hesabından gelsin
+  authStore.start();
+  authStore.addListener(() {
+    moodStore.bindUser(authStore.uid);
+    linkStore.bindUser(authStore.uid);
+  });
+  // Bağlı olduğum danışmanların sözlerini getir
+  linkStore.addListener(
+    () => quoteStore.bindCounselors(linkStore.links.map((l) => l.counselorId).toList()),
+  );
+
   runApp(const AffectaApp());
+  // Widget ve bildirimleri arka planda güncelle (açılışı bekletmez)
+  DailySync.start();
 }
 
 class AffectaApp extends StatelessWidget {
@@ -31,14 +57,57 @@ class AffectaApp extends StatelessWidget {
       builder: (context, _) => MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Affecta',
+        // Türkçe: saat seçici, tarih ve butonlar Türkçe ve 24 saat biçiminde
+        locale: const Locale('tr'),
+        supportedLocales: const [Locale('tr')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: themeStore.mode,
-        home: const LoginScreen(),
-        routes: {
-          '/login': (_) => const LoginScreen(),
-          '/home': (_) => const HomeShell(),
-        },
+        home: const AuthGate(),
+      ),
+    );
+  }
+}
+
+/// Hangi ekranın açılacağına karar verir:
+/// giriş yok → Giriş, admin → Admin paneli, danışman → Danışman paneli,
+/// diğerleri (danışanlar) → Kullanıcı paneli
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: authStore,
+      builder: (context, _) {
+        // AnimatedSwitcher: paneller arası yumuşak geçiş
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: switch (authStore) {
+            AuthStore(ready: false) => const _Splash(),
+            AuthStore(isLoggedIn: false) => const LoginScreen(),
+            AuthStore(showAdminPanel: true) => const AdminShell(),
+            AuthStore(showCounselorPanel: true) => const CounselorShell(),
+            _ => HomeShell(key: ValueKey(authStore.uid)),
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Giriş durumu kontrol edilirken görünen kısa açılış ekranı
+class _Splash extends StatelessWidget {
+  const _Splash();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: AuraBackground(
+        child: Center(
+          child: Text('☾', style: AppTheme.symbol(64, context.palette.primary)),
+        ),
       ),
     );
   }

@@ -1,0 +1,169 @@
+rules_version = '2';
+
+// Affecta güvenlik kuralları
+//  - Herkes yalnızca KENDİ kayıtlarını okur/yazar.
+//  - Danışman, sadece kendisine bağlanan danışanın PAYLAŞTIĞI kopyaları görür.
+//    Notlar yalnızca danışan o kayıt için "paylaş" dediyse kopyada bulunur.
+//  - Admin, kullanıcıların kayıtlarını/notlarını GÖREMEZ; sadece anonim sayıları görür.
+//  - Kimse kendine rol veremez. Danışman ve admin rollerini admin verir.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && myRole() == 'admin';
+    }
+
+    function isCounselor() {
+      return signedIn() && myRole() == 'counselor';
+    }
+
+    // ---- Kullanıcı profilleri ----
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Profil oluştururken rol mutlaka "user" olmalı
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['email', 'name', 'role', 'createdAt'])
+        && request.resource.data.role == 'user';
+
+      // Kullanıcı kendi profilini güncelleyebilir ama rolünü DEĞİŞTİREMEZ
+      allow update: if (isOwner(uid)
+          && request.resource.data.keys().hasOnly(['email', 'name', 'role', 'createdAt'])
+          && request.resource.data.role == resource.data.role)
+        // Admin başkasının sadece rolünü değiştirebilir
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role'])
+          && request.resource.data.role in ['user', 'counselor', 'admin']);
+
+      allow delete: if false;
+
+      // ---- Mood kayıtları: SADECE sahibi ----
+      match /entries/{entryId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['date', 'mood', 'note', 'cards', 'shareNote'])
+          && request.resource.data.mood is int
+          && request.resource.data.mood >= 1 && request.resource.data.mood <= 5
+          && request.resource.data.note is string
+          && request.resource.data.note.size() <= 5000
+          && request.resource.data.cards is list
+          && request.resource.data.cards.size() <= 3;
+      }
+    }
+
+    // ---- Davet kodları: danışman üretir, giriş yapmış herkes kodla arayabilir ----
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if signedIn() && resource.data.counselorId == request.auth.uid;
+      allow create: if isCounselor()
+        && request.resource.data.counselorId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['counselorId', 'counselorName', 'createdAt']);
+      allow delete: if signedIn() && resource.data.counselorId == request.auth.uid;
+    }
+
+    // ---- Danışan ↔ danışman bağlantısı ----
+    match /links/{linkId} {
+      function link() {
+        return get(/databases/$(database)/documents/links/$(linkId)).data;
+      }
+      function isLinkClient() {
+        return signedIn() && link().clientId == request.auth.uid;
+      }
+      function isLinkCounselor() {
+        return signedIn() && link().counselorId == request.auth.uid;
+      }
+
+      allow read: if signedIn()
+        && (resource.data.clientId == request.auth.uid || resource.data.counselorId == request.auth.uid);
+
+      // Bağlantıyı SADECE danışan kurar, geçerli bir davet koduyla
+      allow create: if signedIn()
+        && request.resource.data.clientId == request.auth.uid
+        && linkId == request.resource.data.counselorId + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(
+             ['counselorId', 'clientId', 'counselorName', 'clientName', 'shareMood', 'inviteCode', 'createdAt'])
+        && get(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.counselorId
+             == request.resource.data.counselorId;
+
+      // Danışan sadece paylaşım ayarını değiştirebilir
+      allow update: if signedIn()
+        && resource.data.clientId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['shareMood']);
+
+      // İki taraf da bağlantıyı sonlandırabilir
+      allow delete: if signedIn()
+        && (resource.data.clientId == request.auth.uid || resource.data.counselorId == request.auth.uid);
+
+      // Paylaşılan kopyalar: danışan yazar, danışman okur
+      match /feed/{entryId} {
+        allow read: if isLinkClient() || isLinkCounselor();
+        allow create, update: if isLinkClient()
+          && link().shareMood == true
+          && request.resource.data.keys().hasOnly(['date', 'mood', 'cards', 'note'])
+          && request.resource.data.mood is int
+          && request.resource.data.mood >= 1 && request.resource.data.mood <= 5;
+        allow delete: if isLinkClient() || isLinkCounselor();
+      }
+
+      // Danışmanın özel seans notları: danışan GÖREMEZ
+      match /notes/{noteId} {
+        allow read, delete: if isLinkCounselor();
+        allow create, update: if isLinkCounselor()
+          && request.resource.data.keys().hasOnly(['text', 'createdAt'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 5000;
+      }
+    }
+
+    // ---- Sözler ----
+    //  counselorId yok  → admin'in herkese açık sözü
+    //  counselorId dolu → o danışmanın, danışanlarına gösterdiği söz
+    match /quotes/{quoteId} {
+      function validQuote() {
+        return request.resource.data.keys().hasOnly(['text', 'author', 'feelings', 'createdAt', 'counselorId'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.feelings is list
+          && request.resource.data.feelings.size() > 0;
+      }
+      function ownsQuote(data) {
+        return (!('counselorId' in data) && isAdmin())
+          || (('counselorId' in data) && data.counselorId == request.auth.uid && isCounselor());
+      }
+
+      allow read: if true;
+      allow create: if validQuote() && ownsQuote(request.resource.data);
+      allow update: if validQuote() && ownsQuote(resource.data) && ownsQuote(request.resource.data);
+      allow delete: if ownsQuote(resource.data);
+    }
+
+    // ---- Anonim günlük istatistik: herkes +1/-1 artırır, sadece admin okur ----
+    match /stats/{day} {
+      allow read: if isAdmin();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['entries', 'moodSum', 'm1', 'm2', 'm3', 'm4', 'm5'])
+        && request.resource.data.entries == 1;
+
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['entries', 'moodSum', 'm1', 'm2', 'm3', 'm4', 'm5'])
+        && (request.resource.data.entries - resource.data.entries == 1
+            || request.resource.data.entries - resource.data.entries == -1);
+    }
+  }
+}

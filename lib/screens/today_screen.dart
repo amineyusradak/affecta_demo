@@ -44,6 +44,12 @@ class TodayScreen extends StatelessWidget {
 
             // ---- Günün sözü ----
             if (quote.needsSupport) const _SupportCard() else _QuoteCard(quote: quote),
+
+            // ---- Danışmanından (sadece danışmana bağlıysa ve danışman söz eklediyse) ----
+            if (quoteStore.counselorQuoteOfDay() case final cq?) ...[
+              const SizedBox(height: 14),
+              _CounselorQuoteCard(text: cq.text, author: cq.author),
+            ],
             const SizedBox(height: 32),
 
             // ---- Günün kartı ----
@@ -187,6 +193,48 @@ class _SupportCard extends StatelessWidget {
             "• Kendini güvende hissetmiyorsan hemen 112'yi ara.",
             style: TextStyle(height: 1.5, color: p.textPrimary),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Danışmanın kendi eklediği sözlerden bugünkü
+class _CounselorQuoteCard extends StatelessWidget {
+  final String text;
+  final String? author;
+  const _CounselorQuoteCard({required this.text, this.author});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 20),
+      decoration: BoxDecoration(
+        color: p.surface.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: p.accent.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.favorite_rounded, size: 14, color: p.accent),
+              const SizedBox(width: 8),
+              Text(
+                "DANIŞMANINDAN",
+                style: TextStyle(color: p.accent, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text("“$text”",
+              style: AppTheme.serif(22, p.textPrimary).copyWith(fontStyle: FontStyle.italic, height: 1.25)),
+          if (author != null) ...[
+            const SizedBox(height: 8),
+            Text("— $author", style: TextStyle(fontWeight: FontWeight.w700, color: p.textSecondary)),
+          ],
         ],
       ),
     );
